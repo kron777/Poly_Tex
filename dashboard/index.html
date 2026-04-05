@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>POLY_TEX v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#030d1a;color:#8ab4cc;font-family:'Courier New',monospace;font-size:12px;height:100vh;overflow:hidden;}
+:root{--teal:#00e5ff;--green:#00ff88;--red:#ff3860;--yellow:#ffd600;--blue:#4fc3f7;--panel:#0a1628;--border:#0d2137;}
+.hud{display:grid;grid-template-columns:200px 1fr 240px;grid-template-rows:48px 1fr 28px;height:100vh;gap:1px;background:#0d2137;}
+.topbar{grid-column:1/-1;background:#070f1c;display:flex;align-items:center;padding:0 16px;gap:12px;border-bottom:1px solid var(--border);}
+.logo{font-size:18px;font-weight:900;color:var(--teal);letter-spacing:3px;}
+.logo span{color:var(--blue);font-size:10px;font-weight:400;margin-left:6px;}
+.pill{background:#0d2137;border:1px solid #1a3a5c;padding:3px 10px;border-radius:3px;font-size:10px;display:flex;align-items:center;gap:5px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 1.4s infinite;}
+.dot.bad{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.clock{margin-left:auto;font-size:16px;color:var(--teal);font-weight:900;}
+.badge{background:#0d2137;border:1px solid #1a3a5c;padding:2px 8px;border-radius:3px;font-size:10px;color:var(--yellow);}
+.left{background:var(--panel);padding:10px;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.main{background:var(--panel);display:flex;flex-direction:column;overflow:hidden;}
+.right{background:var(--panel);padding:10px;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.bottombar{grid-column:1/-1;background:#070f1c;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 10px;font-size:10px;color:#3a6a8a;}
+.stat-block{border:1px solid var(--border);padding:8px;border-radius:3px;}
+.stat-label{font-size:8px;color:#3a6a8a;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.stat-val{font-size:20px;color:var(--green);font-weight:900;}
+.stat-sub{font-size:10px;color:#4a7a9b;margin-top:1px;}
+.section{font-size:8px;color:#3a6a8a;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.bar-row{margin-bottom:4px;}
+.bar-label{font-size:9px;color:#5a8ab8;margin-bottom:1px;display:flex;justify-content:space-between;}
+.bar-track{height:3px;background:#0d2137;border-radius:2px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .5s;}
+.log-entry{font-size:9px;padding:2px 0;border-bottom:1px solid #070f1c;color:#3a6a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.log-entry.good{color:var(--green);}
+.log-entry.edge{color:var(--yellow);}
+.log-entry.info{color:var(--blue);}
+.main-header{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.main-header h2{font-size:10px;color:var(--teal);letter-spacing:2px;}
+table{width:100%;border-collapse:collapse;font-size:10px;}
+th{padding:5px 8px;text-align:left;font-size:8px;color:#3a6a8a;letter-spacing:1px;border-bottom:1px solid var(--border);background:#070f1c;position:sticky;top:0;}
+td{padding:5px 8px;border-bottom:1px solid #070f1c;color:#7ab4cc;}
+tr:hover td{background:#0d1f33;}
+tr.hot td{background:#0d1f2a;}
+.yes{color:var(--green);}
+.no{color:var(--red);}
+.eb{padding:1px 5px;border-radius:2px;font-size:9px;font-weight:700;}
+.eb.YES{background:rgba(0,255,136,.15);color:var(--green);}
+.eb.NO{background:rgba(255,56,96,.15);color:var(--red);}
+.tscroll{overflow-y:auto;flex:1;}
+.sys-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #070f1c;font-size:10px;}
+.sys-key{color:#3a6a8a;font-size:9px;}
+.sv-green{color:var(--green);font-weight:700;}
+.sv-yellow{color:var(--yellow);font-weight:700;}
+.sv-red{color:var(--red);font-weight:700;}
+.sv-blue{color:var(--blue);font-weight:700;}
+.opp-card{background:#070f1c;border:1px solid #1a3a5c;border-radius:3px;padding:6px;margin-bottom:4px;}
+.opp-q{font-size:9px;color:#8ab4cc;margin-bottom:3px;line-height:1.3;}
+.opp-row{display:flex;gap:6px;font-size:9px;}
+.timer-box{text-align:center;border:1px solid #1a3a5c;padding:8px;border-radius:3px;}
+.timer-val{font-size:28px;color:var(--yellow);font-weight:900;font-family:'Courier New',monospace;}
+.dstream{flex:1;overflow:hidden;font-size:8px;color:#1a4a5a;line-height:1.5;}
+.rings{display:flex;gap:6px;justify-content:space-around;}
+.ring-wrap{text-align:center;}
+.ring-label{font-size:8px;color:#3a6a8a;margin-top:2px;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="hud">
+<div class="topbar">
+  <div class="logo">POLY_TEX<span>v2.0 · SIGNAL INTELLIGENCE</span></div>
+  <div class="pill"><div class="dot" id="ldot"></div><span id="clbl">CONNECTING</span></div>
+  <div class="pill">CYCLE <b id="cnum">0</b></div>
+  <div class="pill">SIGNALS <b id="snum">0</b></div>
+  <div class="pill">EDGES <b id="enum">0</b></div>
+  <div class="pill">MKTS <b id="mnum">0</b></div>
+  <div class="clock" id="clk">00:00:00</div>
+  <div class="badge">POLYGON</div>
+  <div class="badge" id="modebadge">PAPER</div>
+</div>
+
+<div class="left">
+  <div class="stat-block">
+    <div class="stat-label">Balance</div>
+    <div class="stat-val" id="balance">$1000.00</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-label">P&L</div>
+    <div class="stat-val" id="pnl" style="color:var(--teal)">+$0.00</div>
+    <div class="stat-sub">Daily: <span id="dpnl">$0.00</span></div>
+  </div>
+  <div class="rings">
+    <div class="ring-wrap">
+      <svg width="50" height="50" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#0d2137" stroke-width="5"/>
+        <circle cx="25" cy="25" r="20" fill="none" stroke="var(--teal)" stroke-width="5"
+          stroke-dasharray="126" id="ring-wr" stroke-dashoffset="126"
+          transform="rotate(-90 25 25)" stroke-linecap="round"/>
+        <text x="25" y="29" text-anchor="middle" fill="var(--teal)" font-size="10"
+          font-family="Courier New" font-weight="700" id="ring-wr-txt">0%</text>
+      </svg>
+      <div class="ring-label">WIN%</div>
+    </div>
+    <div class="ring-wrap">
+      <svg width="50" height="50" viewBox="0 0 50 50">
+        <circle cx="25" cy="25" r="20" fill="none" stroke="#0d2137" stroke-width="5"/>
+        <circle cx="25" cy="25" r="20" fill="none" stroke="var(--green)" stroke-width="5"
+          stroke-dasharray="126" id="ring-arb" stroke-dashoffset="126"
+          transform="rotate(-90 25 25)" stroke-linecap="round"/>
+        <text x="25" y="29" text-anchor="middle" fill="var(--green)" font-size="9"
+          font-family="Courier New" font-weight="700" id="ring-arb-txt">$0</text>
+      </svg>
+      <div class="ring-label">ARB</div>
+    </div>
+  </div>
+  <div>
+    <div class="section">Strategies</div>
+    <div id="strat-bars"></div>
+  </div>
+  <div style="flex:1;overflow:hidden;">
+    <div class="section">Live Stream</div>
+    <div id="logbox"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="main-header">
+    <h2>LIVE MARKETS — ALL CATEGORIES</h2>
+    <div style="font-size:9px;color:#3a6a8a" id="mclbl">0 markets</div>
+  </div>
+  <div class="tscroll">
+    <table>
+      <thead><tr>
+        <th style="width:38%">QUESTION</th>
+        <th>YES</th><th>NO</th><th>VOL</th><th>EDGE</th><th>DIR</th><th>STRAT</th>
+      </tr></thead>
+      <tbody id="mtbody"><tr><td colspan="7" style="text-align:center;color:#1a4a5a;padding:30px">AWAITING CONNECTION…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="right">
+  <div class="timer-box">
+    <div class="stat-label">NEXT CYCLE</div>
+    <div class="timer-val" id="tval">00:00</div>
+  </div>
+  <div>
+    <div class="section">System</div>
+    <div class="sys-row"><span class="sys-key">HUD</span><span class="sv-green">LIVE</span></div>
+    <div class="sys-row"><span class="sys-key">BOT</span><span id="bot-status" class="sv-yellow">WAITING</span></div>
+    <div class="sys-row"><span class="sys-key">MODE</span><span id="mode-val" class="sv-yellow">PAPER</span></div>
+    <div class="sys-row"><span class="sys-key">LAST CYCLE</span><span id="last-cycle" style="color:#3a6a8a">—</span></div>
+    <div class="sys-row"><span class="sys-key">KILL SW</span><span id="kill-sw" class="sv-green">OFF</span></div>
+    <div class="sys-row"><span class="sys-key">TRADES</span><span id="trade-count" class="sv-blue">0</span></div>
+    <div class="sys-row"><span class="sys-key">W/L</span><span id="wl" style="color:#3a6a8a">0/0</span></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;">
+    <div class="section">Opportunities</div>
+    <div id="opps"><div style="color:#1a4a5a;font-size:10px;text-align:center;padding:15px;">NO EDGES DETECTED</div></div>
+  </div>
+  <div>
+    <div class="section">Data Stream</div>
+    <div class="dstream" id="dstream"></div>
+  </div>
+</div>
+
+<div class="bottombar">
+  <span id="status-txt">Stream connected — awaiting cycle…</span>
+  <span style="margin-left:auto" id="ts-bar">POLY_TEX v2.0 · PAPER TRADING</span>
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let MC = {}, cycle = 0, sLeft = 60, edges = 0;
+
+setInterval(() => { $('clk').textContent = new Date().toTimeString().slice(0,8); }, 1000);
+setInterval(() => {
+  if(sLeft > 0) sLeft--;
+  const m = Math.floor(sLeft/60), s = sLeft%60;
+  $('tval').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}, 1000);
+setInterval(() => {
+  const h = () => Math.random().toString(16).slice(2,10).toUpperCase();
+  const d = $('dstream');
+  d.innerHTML = h()+' '+h()+'<br>'+d.innerHTML;
+  if(d.innerHTML.split('<br>').length > 15) d.innerHTML = d.innerHTML.split('<br>').slice(0,15).join('<br>');
+}, 1000);
+
+function addLog(msg, cls='') {
+  const d = $('logbox'), t = new Date().toTimeString().slice(0,8);
+  d.innerHTML = `<div class="log-entry ${cls}">${t} ${msg}</div>` + d.innerHTML;
+  if(d.querySelectorAll('.log-entry').length > 20) d.lastElementChild?.remove();
+}
+
+function setRing(id, pct) {
+  const el = $(id); if(!el) return;
+  el.style.strokeDashoffset = 126 - (126 * Math.min(pct,100)/100);
+}
+
+function renderMkts() {
+  const rows = Object.values(MC);
+  if(!rows.length) { $('mtbody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#1a4a5a;padding:30px">AWAITING POLY_TEX…</td></tr>'; return; }
+  rows.sort((a,b) => (Math.abs(b.edge||0)) - (Math.abs(a.edge||0)));
+  $('mtbody').innerHTML = rows.map(m => {
+    const yes = m.yes_price != null ? (m.yes_price*100).toFixed(1)+'%' : '—';
+    const no  = m.no_price  != null ? (m.no_price*100).toFixed(1)+'%'  : '—';
+    const vol = m.volume ? '$'+(m.volume>=1000?(m.volume/1000).toFixed(0)+'k':m.volume.toFixed(0)) : '—';
+    const ev  = m.edge ? (Math.abs(m.edge)*100).toFixed(1)+'%' : null;
+    const dir = m.direction || '';
+    const eh  = ev ? `<span class="eb ${dir}">${ev}</span>` : `<span style="color:#1a4a5a">—</span>`;
+    const dh  = dir ? `<span class="${dir=='YES'?'yes':'no'}">${dir}</span>` : '—';
+    return `<tr class="${m.edge && Math.abs(m.edge)>=0.06 ? 'hot' : ''}">
+      <td style="color:#c0d8e8;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          title="${(m.question||'').replace(/"/g,'')}">${m.question||'—'}</td>
+      <td class="yes">${yes}</td><td class="no">${no}</td>
+      <td>${vol}</td><td>${eh}</td><td>${dh}</td>
+      <td style="color:#4a7a9b;font-size:9px">${m.strategy||'—'}</td>
+    </tr>`;
+  }).join('');
+  $('mclbl').textContent = rows.length + ' markets';
+  $('mnum').textContent = rows.length;
+}
+
+function renderOpps(opps) {
+  if(!opps||!opps.length) { $('opps').innerHTML = '<div style="color:#1a4a5a;font-size:10px;text-align:center;padding:15px;">NO EDGES DETECTED</div>'; return; }
+  $('opps').innerHTML = opps.slice(0,6).map(o => `
+    <div class="opp-card">
+      <div class="opp-q">${o.question||'—'}</div>
+      <div class="opp-row">
+        <span style="color:${o.direction==='YES'?'var(--green)':'var(--red)'}">${o.direction||'—'}</span>
+        <span style="color:var(--yellow)">EDGE ${o.edge!=null?(o.edge*100).toFixed(1)+'%':'—'}</span>
+        <span style="color:var(--teal)">$${o.size_usd!=null?Number(o.size_usd).toFixed(2):'—'}</span>
+        <span style="color:#4a7a9b;font-size:9px">${o.strategy||''}</span>
+      </div>
+    </div>`).join('');
+}
+
+function update(s) {
+  // Debug - log first update
+  if(!window._debugged) { console.log('STATE:', JSON.stringify(s).slice(0,300)); window._debugged=true; }
+  if(!s) return;
+  const bal = s.is_live ? s.usdc_balance : s.paper_balance;
+  $('balance').textContent = '$'+Number(bal||1000).toFixed(2);
+  const pnl = s.total_pnl || 0;
+  $('pnl').textContent = (pnl>=0?'+':'')+' $'+Math.abs(pnl).toFixed(2);
+  $('pnl').style.color = pnl >= 0 ? 'var(--teal)' : 'var(--red)';
+  $('dpnl').textContent = '$'+(s.daily_pnl||0).toFixed(2);
+  $('trade-count').textContent = s.total_trades || 0;
+  $('wl').textContent = (s.wins||0)+'/'+(s.losses||0);
+  const wr = s.total_trades > 0 ? (s.wins||0)/s.total_trades : 0;
+  setRing('ring-wr', wr*100);
+  $('ring-wr-txt').textContent = Math.round(wr*100)+'%';
+  $('ring-arb-txt').textContent = '$'+(s.arb_profit||0).toFixed(0);
+  setRing('ring-arb', Math.min((s.arb_profit||0)/10, 100));
+  // Cycle
+  if(s.cycle && s.cycle !== cycle) {
+    cycle = s.cycle; sLeft = 60;
+    $('cnum').textContent = cycle;
+    $('last-cycle').textContent = s.last_cycle || new Date().toTimeString().slice(0,8);
+    $('bot-status').textContent = 'RUNNING'; $('bot-status').className = 'sv-green';
+    addLog('Cycle '+cycle+' started', 'info');
+    $('status-txt').textContent = 'Cycle '+cycle+' running…';
+  }
+  // Always update markets
+  if(s.markets_scanned) $('mnum').textContent = s.markets_scanned;
+  if(s.markets && s.markets.length) {
+    s.markets.forEach(m => { if(m.id) MC[m.id] = m; });
+    renderMkts();
+  }
+  // Always update opportunities from trades
+  if(s.opportunities && s.opportunities.length) {
+    renderOpps(s.opportunities);
+  } else if(s.trades && s.trades.length) {
+    renderOpps(s.trades.slice(0,6).map(t => ({
+      question: t.question, direction: t.side,
+      edge: t.edge, size_usd: t.size, strategy: t.strategy
+    })));
+  }
+  // Signals count
+  $('snum').textContent = s.signals_found || 0;
+  $('enum').textContent = s.signals_found || 0;
+  // Always show bot running if trades exist
+  if(s.total_trades > 0) {
+    $('bot-status').textContent = 'RUNNING';
+    $('bot-status').className = 'sv-green';
+  }
+  $('kill-sw').textContent = s.kill_switch ? 'ON' : 'OFF';
+  $('kill-sw').className = s.kill_switch ? 'sv-red' : 'sv-green';
+  $('mode-val').textContent = s.is_live ? 'LIVE' : 'PAPER';
+  $('mode-val').className = s.is_live ? 'sv-red' : 'sv-yellow';
+  $('modebadge').textContent = s.is_live ? 'LIVE' : 'PAPER';
+
+  // Strategy bars
+  const strats = [
+    {name:'arb', val: s.arb_profit||0, max:100, color:'var(--green)'},
+    {name:'whale', val: s.whale_copies||0, max:500, color:'var(--blue)'},
+    {name:'signals', val: s.signals_found||0, max:100, color:'var(--teal)'},
+  ];
+  $('strat-bars').innerHTML = strats.map(st => `
+    <div class="bar-row">
+      <div class="bar-label"><span>${st.name}</span><span style="color:${st.color}">${st.val}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(st.val/st.max*100,100)}%;background:${st.color}"></div></div>
+    </div>`).join('');
+}
+
+// Poll /api/state every 2 seconds
+async function poll() {
+  try {
+    const r = await fetch('/api/state');
+    const s = await r.json();
+    $('clbl').textContent = 'LIVE';
+    $('ldot').className = 'dot';
+    update(s);
+  } catch(e) {
+    console.error('Poll error:', e);
+    $('clbl').textContent = 'RECONNECTING';
+    $('ldot').className = 'dot bad';
+  }
+  setTimeout(poll, 2000);
+}
+
+$('clbl').textContent = 'CONNECTING';
+addLog('POLY_TEX v2.0 initializing...', 'info');
+setTimeout(poll, 500);
+</script>
+</body>
+</html>
