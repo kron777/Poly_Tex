@@ -35,7 +35,8 @@ def emit(event_type, data):
             )
         except:
             pass
-    threading.Thread(target=_send, daemon=True).start()
+    t = threading.Thread(target=_send, daemon=False)
+t.start()
 
 # ── Typed emitters ────────────────────────────────────────────────
 
