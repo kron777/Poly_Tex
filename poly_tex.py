@@ -112,6 +112,7 @@ def run_cycle(cycle_num: int, strategies: list, risk: RiskManager):
     log.info(f"Scanned {len(markets)} markets")
 
     # Run each strategy
+    already_traded = {t['market'] for t in state.STATE.trades}
     total_signals = 0
     trades_placed = 0
     for strategy in strategies:
@@ -119,7 +120,9 @@ def run_cycle(cycle_num: int, strategies: list, risk: RiskManager):
             signals = strategy.analyze(markets)
             total_signals += len(signals)
             log.info(f"{strategy.name}: {len(signals)} signals")
-            for signal in signals[:3]:  # Max 3 per strategy per cycle
+            for signal in signals[:2]:  # Max 2 per strategy per cycle
+                if signal.market.condition_id in already_traded:
+                    continue
                 if execute_signal(signal, risk, paper=not IS_LIVE):
                     trades_placed += 1
         except Exception as e:

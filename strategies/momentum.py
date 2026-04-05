@@ -8,9 +8,9 @@ class MomentumStrategy(BaseStrategy):
 
     def analyze(self, markets: list[MarketOpportunity]) -> list[Signal]:
         signals = []
-        for m in self.filter_markets(markets, price_range=(0.10, 0.90)):
+        for m in self.filter_markets(markets, min_vol=25000, price_range=(0.35, 0.65)):
             # Strong YES momentum (price > 0.70, high volume)
-            if m.yes_price > 0.72 and m.volume > 50000:
+            if m.yes_price > 0.55 and m.volume > 50000:
                 edge = m.yes_price - 0.65
                 if edge > 0.05:
                     signals.append(Signal(
@@ -22,7 +22,7 @@ class MomentumStrategy(BaseStrategy):
                         reason=f"Strong YES momentum: {m.yes_price:.3f}"
                     ))
             # Strong NO momentum
-            elif m.yes_price < 0.28 and m.volume > 50000:
+            elif m.yes_price < 0.45 and m.volume > 50000:
                 edge = 0.35 - m.yes_price
                 if edge > 0.05:
                     signals.append(Signal(

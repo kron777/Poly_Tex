@@ -11,7 +11,7 @@ class ConvergenceStrategy(BaseStrategy):
         for m in markets:
             if m.volume < 20000: continue
             # Market near YES resolution (0.85-0.95) — bet on YES
-            if 0.85 <= m.yes_price <= 0.95 and m.liquidity > 1000:
+            if 0.88 <= m.yes_price <= 0.96 and m.volume > 50000 and m.liquidity > 1000:
                 edge = m.yes_price * 0.08
                 signals.append(Signal(
                     market=m, side="YES", edge=edge,
@@ -22,7 +22,7 @@ class ConvergenceStrategy(BaseStrategy):
                     reason=f"Near YES resolution: {m.yes_price:.3f}"
                 ))
             # Market near NO resolution (0.05-0.15) — bet on NO
-            elif 0.05 <= m.yes_price <= 0.15 and m.liquidity > 1000:
+            elif 0.04 <= m.yes_price <= 0.12 and m.volume > 50000 and m.liquidity > 1000:
                 edge = m.no_price * 0.08
                 signals.append(Signal(
                     market=m, side="NO", edge=edge,
