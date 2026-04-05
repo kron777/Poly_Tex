@@ -16,6 +16,7 @@ from strategies import (ArbitrageStrategy, WhaleCopyStrategy,
 from clob_client import get_client
 import state
 from state import update, add_trade, add_opportunity, TradeRecord
+from resolver import resolve_positions
 
 log = get_logger("poly_tex")
 
@@ -127,6 +128,8 @@ def run_cycle(cycle_num: int, strategies: list, risk: RiskManager):
     update(signals_found=total_signals)
     log.info(f"Cycle {cycle_num} done: "
              f"{total_signals} signals, {trades_placed} trades")
+    # Check for resolved positions
+    resolve_positions()
     return trades_placed
 
 def main():
