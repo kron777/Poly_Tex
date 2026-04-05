@@ -158,29 +158,4 @@ export function Header({ state, config, connected, onHistoryClick, onPositionsCl
             )}
           </div>
 
-          {/* Runtime */}
-          <div className="text-right">
-            <div className="text-xs text-gray-500 uppercase tracking-wider">Runtime</div>
-            <div className="text-lg font-mono font-bold text-white">{runtime}</div>
-          </div>
 
-          <div className="w-px h-10 bg-white/10" />
-
-          {/* Wallet */}
-          <button
-            onClick={copyWallet}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-poly-dark/50 border border-poly-border hover:border-poly-purple/50 transition-all group"
-          >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-blue-400" />
-            <span className="font-mono text-sm text-gray-300 group-hover:text-white transition-colors">
-              {shortWallet}
-            </span>
-            <span className="text-gray-500 group-hover:text-gray-300 transition-colors">
-              {copied ? '✓' : '📋'}
-            </span>
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-}
