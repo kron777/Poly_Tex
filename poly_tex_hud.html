@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POLY_TEX · SIGNAL HUD</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #00ff9d;
+  --green-dim: #00cc7a;
+  --green-dark: #004d2e;
+  --red: #ff3860;
+  --amber: #ffaa00;
+  --blue: #00aaff;
+  --bg: #020c06;
+  --bg2: #040f08;
+  --bg3: #071a0e;
+  --border: #0a2a17;
+  --border-bright: #0f3d22;
+  --text: #b0ffcc;
+  --text-dim: #4a8860;
+  --text-muted: #1f4a30;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  cursor: crosshair;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,157,0.015) 2px,
+    rgba(0,255,157,0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 1000;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,255,157,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 999;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.85; }
+  94% { opacity: 1; }
+  96% { opacity: 0.9; }
+  97% { opacity: 1; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
+  50% { opacity: 0.4; box-shadow: none; }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes glitch {
+  0%, 100% { text-shadow: 0 0 10px var(--green); transform: none; }
+  92% { text-shadow: 0 0 10px var(--green); transform: none; }
+  93% { text-shadow: -2px 0 var(--red), 2px 0 var(--blue); transform: skewX(-1deg); }
+  94% { text-shadow: 2px 0 var(--red), -2px 0 var(--blue); transform: skewX(1deg); }
+  95% { text-shadow: 0 0 10px var(--green); transform: none; }
+}
+
+@keyframes countbar {
+  from { width: 0; }
+  to { width: var(--target-w); }
+}
+
+@keyframes edge-flash {
+  0% { background: rgba(0,255,157,0.3); }
+  100% { background: transparent; }
+}
+
+.scanline {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(transparent, rgba(0,255,157,0.12), transparent);
+  animation: scan 6s linear infinite;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+#root {
+  display: grid;
+  grid-template-rows: 44px 1fr;
+  grid-template-columns: 1fr;
+  height: 100vh;
+  animation: flicker 8s infinite;
+}
+
+/* ── TOPBAR ── */
+#topbar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-bright);
+  background: var(--bg2);
+  gap: 24px;
+}
+
+.logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--green);
+  letter-spacing: 4px;
+  animation: glitch 10s infinite;
+  text-shadow: 0 0 20px var(--green);
+  flex-shrink: 0;
+}
+
+.logo span { color: var(--text-dim); font-weight: 400; font-size: 10px; letter-spacing: 2px; margin-left: 8px; }
+
+.top-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-bright);
+  background: var(--bg3);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.dot.red { background: var(--red); animation: pulse-dot 0.8s ease-in-out infinite; }
+.dot.amber { background: var(--amber); }
+
+.top-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+
+#clock {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  color: var(--green);
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px var(--green);
+}
+
+.chain-badge {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--amber);
+  border: 1px solid rgba(255,170,0,0.3);
+  padding: 2px 8px;
+}
+
+.dry-badge {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--red);
+  border: 1px solid rgba(255,56,96,0.3);
+  padding: 2px 8px;
+}
+
+/* ── MAIN GRID ── */
+#main {
+  display: grid;
+  grid-template-columns: 280px 1fr 240px;
+  grid-template-rows: 1fr;
+  gap: 1px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+/* ── PANELS ── */
+.panel {
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-head {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.panel-head h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--green-dim);
+  font-weight: 700;
+}
+
+.panel-head .ph-right { margin-left: auto; font-size: 9px; color: var(--text-dim); }
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) transparent;
+}
+
+/* ── LEFT COL ── */
+#left-col {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 1px;
+  background: var(--border);
+}
+
+/* ── STAT CARDS ── */
+.stat-block {
+  background: var(--bg2);
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.stat-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  color: var(--green);
+  font-weight: 700;
+  text-shadow: 0 0 15px var(--green);
+  letter-spacing: 1px;
+}
+
+.stat-val.red { color: var(--red); text-shadow: 0 0 15px var(--red); }
+.stat-val.amber { color: var(--amber); text-shadow: 0 0 15px var(--amber); }
+.stat-val.sm { font-size: 13px; }
+
+.stat-sub {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* ── SIGNAL BARS ── */
+.topic-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+
+.topic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topic-name {
+  font-size: 9px;
+  color: var(--text-dim);
+  width: 72px;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.topic-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.topic-bar-fill {
+  height: 100%;
+  background: var(--green);
+  opacity: 0.7;
+  transition: width 1s ease;
+}
+
+.topic-count {
+  font-size: 9px;
+  color: var(--text-dim);
+  width: 24px;
+  text-align: right;
+}
+
+/* ── STREAM LOG ── */
+.stream-log {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.log-entry {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 4px 6px;
+  border-left: 2px solid var(--border-bright);
+  font-size: 9px;
+}
+
+.log-entry.good { border-color: var(--green); background: rgba(0,255,157,0.04); }
+.log-entry.bad { border-color: var(--red); background: rgba(255,56,96,0.04); }
+.log-entry.info { border-color: var(--blue); background: rgba(0,170,255,0.04); }
+.log-entry.warn { border-color: var(--amber); background: rgba(255,170,0,0.04); }
+
+.log-ts { color: var(--text-muted); flex-shrink: 0; font-size: 8px; }
+.log-msg { color: var(--text); line-height: 1.4; }
+
+/* ── CENTER ── */
+#center { display: grid; grid-template-rows: auto 1fr; gap: 1px; background: var(--border); }
+
+/* ── MARKET TABLE ── */
+#market-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+#market-table th {
+  padding: 6px 8px;
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 400;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg3);
+}
+
+#market-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+#market-table tr { transition: background 0.3s; }
+#market-table tr:hover td { background: rgba(0,255,157,0.04); }
+#market-table tr.edge-row td { animation: edge-flash 1.5s ease; }
+
+.question-cell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.price-yes { color: var(--green); font-weight: 500; }
+.price-no { color: var(--red); }
+.vol-cell { color: var(--text-dim); }
+
+.edge-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.edge-badge.yes { background: rgba(0,255,157,0.15); color: var(--green); border: 1px solid var(--green-dark); }
+.edge-badge.no { background: rgba(255,56,96,0.12); color: var(--red); border: 1px solid rgba(255,56,96,0.3); }
+.edge-badge.none { color: var(--text-muted); }
+
+.dir-badge {
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border: 1px solid;
+}
+
+.dir-badge.YES { color: var(--green); border-color: var(--green-dark); }
+.dir-badge.NO { color: var(--red); border-color: rgba(255,56,96,0.3); }
+
+/* ── BOTTOM TICKER ── */
+#ticker-wrap {
+  background: var(--bg3);
+  border-top: 1px solid var(--border-bright);
+  overflow: hidden;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+#ticker {
+  display: flex;
+  gap: 40px;
+  white-space: nowrap;
+  animation: ticker-scroll 30s linear infinite;
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+.ticker-item span { color: var(--green); margin-left: 6px; }
+.ticker-item .dn { color: var(--red); }
+
+/* ── RIGHT COL ── */
+#right-col {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 1px;
+  background: var(--border);
+}
+
+/* ── COUNTDOWN ── */
+.countdown-block {
+  background: var(--bg2);
+  padding: 12px;
+  text-align: center;
+}
+
+.countdown-label {
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+#countdown {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--amber);
+  text-shadow: 0 0 20px var(--amber);
+  letter-spacing: 2px;
+}
+
+.progress-bar-wrap {
+  height: 3px;
+  background: var(--bg3);
+  margin-top: 8px;
+  border: 1px solid var(--border);
+}
+
+#cycle-progress {
+  height: 100%;
+  background: var(--amber);
+  transition: width 1s linear;
+  box-shadow: 0 0 8px var(--amber);
+}
+
+/* ── BETS ── */
+.bet-entry {
+  padding: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+  background: var(--bg3);
+  position: relative;
+  overflow: hidden;
+}
+
+.bet-entry::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--green);
+}
+
+.bet-entry.dry::before { background: var(--amber); }
+
+.bet-q {
+  font-size: 9px;
+  color: var(--text);
+  margin-bottom: 5px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.bet-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bet-chip {
+  font-size: 8px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+
+.bet-chip.edge { color: var(--green); border-color: var(--green-dark); }
+.bet-chip.dry { color: var(--amber); border-color: rgba(255,170,0,0.3); }
+
+/* ── PNL CHART ── */
+#pnl-mini {
+  height: 60px;
+  margin-top: 8px;
+  position: relative;
+}
+
+#pnl-mini svg { width: 100%; height: 100%; }
+
+/* ── SYSTEM STATUS ── */
+.sys-rows { display: flex; flex-direction: column; gap: 5px; }
+
+.sys-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 9px;
+}
+
+.sys-key { color: var(--text-dim); letter-spacing: 0.5px; }
+
+.sys-val { color: var(--green); }
+.sys-val.warn { color: var(--amber); }
+.sys-val.bad { color: var(--red); }
+
+.cursor::after {
+  content: '█';
+  animation: blink 1s infinite;
+  color: var(--green);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<div id="root">
+
+  <!-- ── TOPBAR ── -->
+  <div id="topbar">
+    <div class="logo">POLY_TEX <span>SIGNAL INTELLIGENCE</span></div>
+    <div class="top-pill"><div class="dot" id="live-dot"></div><span id="conn-status">CONNECTING</span></div>
+    <div class="top-pill">CYCLE <span id="cycle-num" style="color:var(--green);margin-left:4px">0</span></div>
+    <div class="top-pill">SIG <span id="sig-count" style="color:var(--green);margin-left:4px">—</span></div>
+    <div class="top-pill">EDGE <span id="edge-count" style="color:var(--amber);margin-left:4px">—</span></div>
+    <div class="top-right">
+      <div id="clock">00:00:00</div>
+      <div class="chain-badge">POLYGON MAINNET</div>
+      <div class="dry-badge" id="mode-badge">DRY RUN</div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+
+    <!-- ── LEFT ── -->
+    <div id="left-col">
+
+      <!-- Bankroll -->
+      <div class="stat-block">
+        <div class="stat-row">
+          <div class="stat-label">BANKROLL</div>
+          <div class="stat-val" id="bankroll">$0.00</div>
+        </div>
+        <div class="stat-row" style="margin-top:8px">
+          <div class="stat-label">SESSION P&amp;L</div>
+          <div class="stat-val sm" id="pnl" style="color:var(--text-dim)">+$0.00</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">WIN RATE</div>
+          <div class="stat-val sm" id="winrate" style="color:var(--text-dim)">—</div>
+        </div>
+        <div id="pnl-mini">
+          <svg id="pnl-svg" viewBox="0 0 200 60" preserveAspectRatio="none">
+            <polyline id="pnl-line" fill="none" stroke="#00ff9d" stroke-width="1.5" opacity="0.8" points="0,30"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Signal Graph -->
+      <div class="stat-block">
+        <div class="stat-row" style="margin-bottom:8px">
+          <div class="stat-label">SIGNAL GRAPH</div>
+          <div style="font-size:9px;color:var(--text-dim)" id="avg-conf">AVG CONF —</div>
+        </div>
+        <div class="topic-bars" id="topic-bars">
+          <div class="topic-row">
+            <div class="topic-name">crypto</div>
+            <div class="topic-bar-wrap"><div class="topic-bar-fill" id="bar-crypto" style="width:0%"></div></div>
+            <div class="topic-count" id="cnt-crypto">0</div>
+          </div>
+          <div class="topic-row">
+            <div class="topic-name">macro</div>
+            <div class="topic-bar-wrap"><div class="topic-bar-fill" id="bar-macro" style="width:0%;opacity:0.5"></div></div>
+            <div class="topic-count" id="cnt-macro">0</div>
+          </div>
+          <div class="topic-row">
+            <div class="topic-name">regulation</div>
+            <div class="topic-bar-wrap"><div class="topic-bar-fill" id="bar-regulation" style="width:0%;opacity:0.4"></div></div>
+            <div class="topic-count" id="cnt-regulation">0</div>
+          </div>
+          <div class="topic-row">
+            <div class="topic-name">equities</div>
+            <div class="topic-bar-wrap"><div class="topic-bar-fill" id="bar-equities" style="width:0%;opacity:0.35"></div></div>
+            <div class="topic-count" id="cnt-equities">0</div>
+          </div>
+          <div class="topic-row">
+            <div class="topic-name">forex</div>
+            <div class="topic-bar-wrap"><div class="topic-bar-fill" id="bar-forex" style="width:0%;opacity:0.3"></div></div>
+            <div class="topic-count" id="cnt-forex">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stream log -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>LIVE STREAM</h2>
+          <div class="ph-right cursor"></div>
+        </div>
+        <div class="panel-body" id="stream-log">
+          <div class="stream-log" id="log-entries"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── CENTER ── -->
+    <div id="center">
+
+      <div class="panel" style="flex:1;min-height:0">
+        <div class="panel-head">
+          <h2>LIVE MARKETS — CRYPTO / FINANCE</h2>
+          <div class="ph-right" id="market-count">0 markets</div>
+        </div>
+        <div class="panel-body" style="padding:0">
+          <table id="market-table">
+            <thead>
+              <tr>
+                <th style="width:40%">QUESTION</th>
+                <th>YES</th>
+                <th>NO</th>
+                <th>VOL</th>
+                <th>OUR P</th>
+                <th>EDGE</th>
+                <th>DIR</th>
+              </tr>
+            </thead>
+            <tbody id="market-tbody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px">
+                AWAITING POLY_TEX CONNECTION…
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="ticker-wrap">
+        <div id="ticker">
+          <span class="ticker-item">BTC <span id="btc-val">—</span></span>
+          <span class="ticker-item">ETH <span id="eth-val">—</span></span>
+          <span class="ticker-item">FEAR&amp;GREED <span id="fg-val">—</span></span>
+          <span class="ticker-item">SIGNALS <span id="ticker-sigs">—</span></span>
+          <span class="ticker-item">EDGES FOUND <span id="ticker-edges">—</span></span>
+          <span class="ticker-item">CYCLE <span id="ticker-cycle">—</span></span>
+          <span class="ticker-item">POLYGON MAINNET · DRY RUN</span>
+          <span class="ticker-item">POLY_TEX SIGNAL INTELLIGENCE v4.0</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT ── -->
+    <div id="right-col">
+
+      <!-- Countdown -->
+      <div class="countdown-block">
+        <div class="countdown-label">NEXT CYCLE IN</div>
+        <div id="countdown">15:00</div>
+        <div class="progress-bar-wrap">
+          <div id="cycle-progress" style="width:100%"></div>
+        </div>
+      </div>
+
+      <!-- Bets / Opportunities -->
+      <div class="panel" style="flex:1;min-height:0">
+        <div class="panel-head">
+          <h2>OPPORTUNITIES</h2>
+          <div class="ph-right" id="opp-count">0</div>
+        </div>
+        <div class="panel-body" id="opp-list">
+          <div style="color:var(--text-muted);font-size:9px;text-align:center;padding:16px">
+            NO EDGES DETECTED<br>
+            <span style="color:var(--text-muted);font-size:8px">BUILD SIGNAL CORPUS →  500+</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- System -->
+      <div class="panel">
+        <div class="panel-head"><h2>SYSTEM</h2></div>
+        <div class="panel-body">
+          <div class="sys-rows">
+            <div class="sys-row">
+              <div class="sys-key">HUD</div>
+              <div class="sys-val" id="sys-hud">LIVE</div>
+            </div>
+            <div class="sys-row">
+              <div class="sys-key">POLY_TEX</div>
+              <div class="sys-val warn" id="sys-bot">WAITING</div>
+            </div>
+            <div class="sys-row">
+              <div class="sys-key">POLYMARKET</div>
+              <div class="sys-val" id="sys-api">API OK</div>
+            </div>
+            <div class="sys-row">
+              <div class="sys-key">FAISS</div>
+              <div class="sys-val warn" id="sys-faiss">NOT BUILT</div>
+            </div>
+            <div class="sys-row">
+              <div class="sys-key">WALLETS</div>
+              <div class="sys-val warn" id="sys-wallets">401</div>
+            </div>
+            <div class="sys-row">
+              <div class="sys-key">CHAIN</div>
+              <div class="sys-val">POLYGON</div>
+            </div>
+            <div class="sys-row">
+              <div class="sys-key">LAST CYCLE</div>
+              <div class="sys-val" id="sys-lastcycle">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ── Clock ───────────────────────────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  $('clock').textContent = now.toTimeString().slice(0, 8);
+}
+setInterval(tick, 1000);
+tick();
+
+// ── Countdown ───────────────────────────────────────────────────────────────
+const CYCLE_SECS = 15 * 60;
+let cycleSecsLeft = CYCLE_SECS;
+
+function updateCountdown() {
+  const m = Math.floor(cycleSecsLeft / 60);
+  const s = cycleSecsLeft % 60;
+  $('countdown').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const pct = (cycleSecsLeft / CYCLE_SECS) * 100;
+  $('cycle-progress').style.width = pct + '%';
+  if (cycleSecsLeft > 0) cycleSecsLeft--;
+}
+
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// ── P&L mini chart ──────────────────────────────────────────────────────────
+const pnlHistory = [0];
+
+function updatePnlChart() {
+  const line = $('pnl-line');
+  const n = pnlHistory.length;
+  if (n < 2) return;
+  const min = Math.min(...pnlHistory);
+  const max = Math.max(...pnlHistory);
+  const range = max - min || 1;
+  const pts = pnlHistory.map((v, i) => {
+    const x = (i / (n - 1)) * 200;
+    const y = 55 - ((v - min) / range) * 50;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  line.setAttribute('points', pts);
+  line.setAttribute('stroke', pnlHistory[pnlHistory.length - 1] >= 0 ? '#00ff9d' : '#ff3860');
+}
+
+// ── Log entries ─────────────────────────────────────────────────────────────
+function addLog(msg, type = 'info') {
+  const wrap = $('log-entries');
+  const now = new Date().toTimeString().slice(0,8);
+  const el = document.createElement('div');
+  el.className = `log-entry ${type}`;
+  el.innerHTML = `<div class="log-ts">${now}</div><div class="log-msg">${msg}</div>`;
+  wrap.insertBefore(el, wrap.firstChild);
+  while (wrap.children.length > 80) wrap.removeChild(wrap.lastChild);
+}
+
+// ── Market table ─────────────────────────────────────────────────────────────
+const marketsCache = {};
+
+function renderMarkets() {
+  const tbody = $('market-tbody');
+  const rows = Object.values(marketsCache);
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px">NO MARKETS LOADED</td></tr>';
+    return;
+  }
+  rows.sort((a, b) => (b.edge || 0) - (a.edge || 0));
+  tbody.innerHTML = rows.map(m => {
+    const yes = m.yes_price != null ? (m.yes_price * 100).toFixed(1) + '%' : '—';
+    const no = m.no_price != null ? (m.no_price * 100).toFixed(1) + '%' : '—';
+    const vol = m.volume ? '$' + (m.volume >= 1000 ? (m.volume/1000).toFixed(0)+'k' : m.volume.toFixed(0)) : '—';
+    const ourP = m.our_prob != null ? (m.our_prob * 100).toFixed(1) + '%' : '—';
+    const edgeVal = m.edge != null ? Math.abs(m.edge * 100).toFixed(1) + '%' : null;
+    const edgeHtml = edgeVal
+      ? `<span class="edge-badge ${m.direction === 'YES' ? 'yes' : 'no'}">${edgeVal}</span>`
+      : `<span class="edge-badge none">—</span>`;
+    const dirHtml = m.direction && m.edge
+      ? `<span class="dir-badge ${m.direction}">${m.direction}</span>`
+      : '<span style="color:var(--text-muted)">—</span>';
+    return `<tr class="${m.edge && Math.abs(m.edge) >= 0.08 ? 'edge-row' : ''}">
+      <td class="question-cell" title="${(m.question||'').replace(/"/g,'&quot;')}">${m.question || '—'}</td>
+      <td class="price-yes">${yes}</td>
+      <td class="price-no">${no}</td>
+      <td class="vol-cell">${vol}</td>
+      <td style="color:var(--blue)">${ourP}</td>
+      <td>${edgeHtml}</td>
+      <td>${dirHtml}</td>
+    </tr>`;
+  }).join('');
+  $('market-count').textContent = rows.length + ' markets';
+}
+
+// ── Opportunities ────────────────────────────────────────────────────────────
+const oppsCache = [];
+let oppCount = 0;
+
+function addOpportunity(opp) {
+  oppCount++;
+  $('opp-count').textContent = oppCount;
+  const wrap = $('opp-list');
+  if (wrap.querySelector('div[style*="NO EDGES"]')) wrap.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'bet-entry' + (opp.dry_run ? ' dry' : '');
+  const edge = opp.edge != null ? (opp.edge * 100).toFixed(1) : '?';
+  const size = opp.position_size != null ? '$' + opp.position_size.toFixed(2) : '?';
+  el.innerHTML = `
+    <div class="bet-q">${opp.question || 'Unknown market'}</div>
+    <div class="bet-meta">
+      <span class="bet-chip ${opp.direction === 'YES' ? 'edge' : ''}">${opp.direction || '?'}</span>
+      <span class="bet-chip edge">+${edge}% EDGE</span>
+      <span class="bet-chip">${size}</span>
+      ${opp.dry_run ? '<span class="bet-chip dry">DRY</span>' : ''}
+    </div>`;
+  wrap.insertBefore(el, wrap.firstChild);
+  while (wrap.children.length > 20) wrap.removeChild(wrap.lastChild);
+}
+
+// ── Signal bars ──────────────────────────────────────────────────────────────
+function updateSignalBars(topics) {
+  const total = Object.values(topics).reduce((a, b) => a + b, 0) || 1;
+  ['crypto','macro','regulation','equities','forex'].forEach(t => {
+    const cnt = topics[t] || 0;
+    const pct = Math.round((cnt / total) * 100);
+    const bar = $('bar-' + t);
+    const cnt_el = $('cnt-' + t);
+    if (bar) bar.style.width = pct + '%';
+    if (cnt_el) cnt_el.textContent = cnt;
+  });
+}
+
+// ── SSE connection ───────────────────────────────────────────────────────────
+let sse = null;
+let reconnectTimer = null;
+
+function connect() {
+  if (sse) { sse.close(); sse = null; }
+
+  $('conn-status').textContent = 'CONNECTING';
+  $('live-dot').className = 'dot amber';
+  $('sys-bot').textContent = 'CONNECTING';
+  $('sys-bot').className = 'sys-val warn';
+
+  sse = new EventSource('/stream');
+
+  sse.onopen = () => {
+    $('conn-status').textContent = 'LIVE';
+    $('live-dot').className = 'dot';
+    $('sys-bot').textContent = 'LIVE';
+    $('sys-bot').className = 'sys-val';
+    addLog('SSE stream connected', 'good');
+    clearTimeout(reconnectTimer);
+  };
+
+  sse.onmessage = e => {
+    try {
+      const raw = JSON.parse(e.data);
+      const d = raw.data ? {...raw, ...raw.data} : raw;
+      handleEvent(d);
+    } catch(err) {
+      if (e.data && e.data !== 'ping') addLog(e.data, 'info');
+    }
+  };
+
+  sse.onerror = () => {
+    $('conn-status').textContent = 'RECONNECTING';
+    $('live-dot').className = 'dot red';
+    $('sys-bot').textContent = 'OFFLINE';
+    $('sys-bot').className = 'sys-val bad';
+    sse.close();
+    sse = null;
+    reconnectTimer = setTimeout(connect, 3000);
+  };
+}
+
+// ── Event handler ────────────────────────────────────────────────────────────
+function handleEvent(d) {
+  const type = d.type || d.event || '';
+
+  // Cycle start
+  if (type === 'cycle_start' || type === 'cycle') {
+    const n = d.cycle || d.number || 0;
+    $('cycle-num').textContent = n;
+    $('ticker-cycle').textContent = n;
+    $('sys-lastcycle').textContent = new Date().toTimeString().slice(0,8);
+    cycleSecsLeft = CYCLE_SECS;
+    addLog(`Cycle ${n} started`, 'info');
+  }
+
+  // Signal stats
+  if (type === 'stats' || type === 'signal_stats') {
+    const total = d.total_signals || d.signals || 0;
+    $('sig-count').textContent = total;
+    $('ticker-sigs').textContent = total;
+    if (d.avg_confidence) $('avg-conf').textContent = 'AVG CONF ' + d.avg_confidence.toFixed(3);
+    if (d.topics) updateSignalBars(d.topics);
+  }
+
+  // Markets
+  if (type === 'market' || type === 'markets') {
+    const mkts = d.markets || (d.market ? [d.market] : []);
+    mkts.forEach(m => {
+      if (m.id || m.condition_id) {
+        const key = m.id || m.condition_id;
+        marketsCache[key] = m;
+      }
+    });
+    renderMarkets();
+  }
+
+  // Ingestion result
+  if (type === 'ingest_done' || type === 'ingest') {
+    const n = d.added || d.count || 0;
+    $('sig-count').textContent = d.total || $('sig-count').textContent;
+    addLog(`+${n} signals ingested`, n > 0 ? 'good' : 'warn');
+  }
+
+  // Edge / opportunity
+  if (type === 'edge' || type === 'opportunity') {
+    const edges = d.edges || (d.edge ? [d] : []);
+    edges.forEach(opp => {
+      addOpportunity(opp);
+      $('edge-count').textContent = oppCount;
+      $('ticker-edges').textContent = oppCount;
+      addLog(`EDGE: ${opp.direction} ${((opp.edge||0)*100).toFixed(1)}% — ${(opp.question||'').slice(0,50)}`, 'good');
+    });
+    // update market row
+    if (d.market_id && marketsCache[d.market_id]) {
+      marketsCache[d.market_id].edge = d.edge;
+      marketsCache[d.market_id].direction = d.direction;
+      marketsCache[d.market_id].our_prob = d.our_prob;
+      renderMarkets();
+    }
+  }
+
+  // Balance
+  if (type === 'balance') {
+    const bal = d.balance || d.amount || 0;
+    $('bankroll').textContent = '$' + bal.toFixed(2);
+  }
+
+  // P&L
+  if (type === 'pnl') {
+    const val = d.pnl || d.amount || 0;
+    const el = $('pnl');
+    el.textContent = (val >= 0 ? '+' : '') + '$' + Math.abs(val).toFixed(2);
+    el.style.color = val >= 0 ? 'var(--green)' : 'var(--red)';
+    pnlHistory.push(val);
+    if (pnlHistory.length > 50) pnlHistory.shift();
+    updatePnlChart();
+  }
+
+  // Fear & greed
+  if (type === 'fear_greed') {
+    const v = d.value || 0;
+    $('fg-val').textContent = v + ' (' + (d.label || '') + ')';
+  }
+
+  // Notification / log
+  if (type === 'notification' || type === 'log') {
+    const severity = d.level || 'info';
+    addLog(d.message || d.msg || JSON.stringify(d).slice(0,80), severity);
+  }
+
+  // Win stats
+  if (type === 'win_stats' || d.wins != null) {
+    const wins = d.wins || 0;
+    const total = d.total_bets || 0;
+    $('winrate').textContent = total > 0 ? Math.round((wins/total)*100) + '%' : '—';
+  }
+
+  // Full state snapshot on connect
+  if (type === 'state' || type === 'snapshot') {
+    if (d.signals) { $('sig-count').textContent = d.signals; $('ticker-sigs').textContent = d.signals; }
+    if (d.cycle) $('cycle-num').textContent = d.cycle;
+    if (d.markets) { d.markets.forEach(m => { if (m.id) marketsCache[m.id] = m; }); renderMarkets(); }
+    if (d.topics) updateSignalBars(d.topics);
+    if (d.balance != null) $('bankroll').textContent = '$' + Number(d.balance).toFixed(2);
+    addLog('State snapshot received', 'info');
+  }
+
+  // FAISS status
+  if (type === 'faiss' || d.faiss_built != null) {
+    $('sys-faiss').textContent = d.faiss_built ? 'READY' : 'NOT BUILT';
+    $('sys-faiss').className = d.faiss_built ? 'sys-val' : 'sys-val warn';
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+connect();
+addLog('POLY_TEX HUD initialized — connecting to signal stream…', 'info');
+$('sys-hud').textContent = 'LIVE';
+</script>
+</body>
+</html>

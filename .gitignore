@@ -1,0 +1,9 @@
+venv/
+data/*.db
+data/*.faiss
+*.pkl
+__pycache__/
+*.pyc
+.env
+logs/
+*.pid
