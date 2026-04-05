@@ -64,9 +64,9 @@ let CONFIG = {
     enabled: process.env.SMARTMONEY_ENABLED !== 'false',
     topN: 20,
     // 🔴 FIXED: Stricter criteria (v3.1)
-    minWinRate: 0.60,  // Up from 0.70 to match bot-config (60%+)
-    minPnl: 500,       // Up from 70 to $500
-    minTrades: 30,     // Up from 15 to 30
+    minWinRate: 0.65,  // 65% minimum win rate
+    minPnl: 1000,      // $1000 minimum PnL
+    minTrades: 50,     // 50 minimum trades
 
     // 🔴 NEW: Quality filters
     minProfitFactor: 1.5,  // Total wins / total losses >= 1.5x
@@ -79,10 +79,7 @@ let CONFIG = {
     maxSlippage: 0.03,
     minTradeSize: 10,  // Up from 5
     delay: 500,
-    customWallets: [
-      '0xc2e7800b5af46e6093872b177b7a5e7f0563be51',
-      '0x58c3f5d66c95d4c41b093fbdd2520e46b6c9de74',
-    ] as string[],
+    customWallets: [] as string[],  // No custom wallets - use leaderboard only
   },
 
   arbitrage: {
