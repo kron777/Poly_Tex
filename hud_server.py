@@ -80,6 +80,14 @@ def receive_event():
     # Update state snapshot
     if etype == "state":
         _state.update(data)
+    elif etype == "cycle_start":
+        _state["cycle"] = data.get("cycle", 0)
+    elif etype == "stats":
+        _state["sig_count"] = data.get("total_signals", _state.get("sig_count", 0))
+        _state["avg_conf"] = data.get("avg_confidence", 0)
+        _state["topics"] = data.get("topics", {})
+    elif etype == "ingest_done":
+        _state["sig_count"] = _state.get("sig_count", 0) + data.get("added", 0)
     elif etype == "markets":
         _state["markets"] = data.get("markets", [])
     elif etype == "wallets":

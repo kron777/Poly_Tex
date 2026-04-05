@@ -9,7 +9,7 @@ import time
 import threading
 import requests
 
-HUD_SERVER = "http://localhost:7824"
+HUD_SERVER = "http://10.2.0.2:7824"
 _enabled   = False
 _lock      = threading.Lock()
 
@@ -35,8 +35,7 @@ def emit(event_type, data):
             )
         except:
             pass
-    t = threading.Thread(target=_send, daemon=False)
-t.start()
+    threading.Thread(target=_send, daemon=False).start()
 
 # ── Typed emitters ────────────────────────────────────────────────
 

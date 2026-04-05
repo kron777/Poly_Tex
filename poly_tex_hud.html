@@ -1063,11 +1063,15 @@ function handleEvent(d) {
 
   // Full state snapshot on connect
   if (type === 'state' || type === 'snapshot') {
-    if (d.signals) { $('sig-count').textContent = d.signals; $('ticker-sigs').textContent = d.signals; }
-    if (d.cycle) $('cycle-num').textContent = d.cycle;
-    if (d.markets) { d.markets.forEach(m => { if (m.id) marketsCache[m.id] = m; }); renderMarkets(); }
-    if (d.topics) updateSignalBars(d.topics);
-    if (d.balance != null) $('bankroll').textContent = '$' + Number(d.balance).toFixed(2);
+    const sd = d.data || d;
+    const sigs = sd.sig_count || sd.signals || sd.total_signals || 0;
+    if (sigs) { $('sig-count').textContent = sigs; $('ticker-sigs').textContent = sigs; }
+    if (sd.cycle) $('cycle-num').textContent = sd.cycle;
+    if (sd.avg_conf) $('avg-conf').textContent = 'AVG CONF ' + Number(sd.avg_conf).toFixed(3);
+    if (sd.markets && sd.markets.length) { sd.markets.forEach(m => { if (m.id) marketsCache[m.id] = m; }); renderMarkets(); }
+    if (sd.topics) updateSignalBars(sd.topics);
+    if (sd.bankroll != null) $('bankroll').textContent = '$' + Number(sd.bankroll).toFixed(2);
+    if (sd.session_pnl != null) { const v=sd.session_pnl; $('pnl').textContent=(v>=0?'+':'')+' $'+Math.abs(v).toFixed(2); }
     addLog('State snapshot received', 'info');
   }
 
