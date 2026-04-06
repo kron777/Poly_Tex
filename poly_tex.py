@@ -13,7 +13,7 @@ from market_scanner import scan_markets
 from risk_manager import RiskManager
 from strategies import (ArbitrageStrategy, WhaleCopyStrategy,
                         MomentumStrategy, ConvergenceStrategy, ShortTermStrategy,
-                        WebSocketTrader)
+                        WebSocketTrader, CryptoUpDownStrategy)
 from clob_client import get_client
 import state
 from state import update, add_trade, add_opportunity, TradeRecord
@@ -162,6 +162,7 @@ def main():
         WhaleCopyStrategy(capital=CAPITAL_WHALE, paper=not IS_LIVE),
         ShortTermStrategy(capital=200.0, paper=not IS_LIVE),
         WebSocketTrader(capital=200.0, paper=not IS_LIVE),
+        CryptoUpDownStrategy(capital=150.0, paper=not IS_LIVE),
     ]
     log.info(f"Loaded {len(strategies)} strategies")
 
