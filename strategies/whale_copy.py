@@ -112,6 +112,15 @@ class WhaleCopyStrategy(BaseStrategy):
                            trade.get("amount", trade.get("size", 0))) or 0)
 
                 if usd_size < 10: continue
+                # Skip long-dated markets
+                from datetime import datetime, timezone
+                end = market.end_date or ''
+                if end:
+                    try:
+                        e = datetime.fromisoformat(end.replace('Z','+00:00'))
+                        if (e - datetime.now(timezone.utc)).days > 30:
+                            continue
+                    except: pass
 
                 copy_size = min(usd_size * WHALE_SIZE_SCALE, WHALE_MAX_SIZE)
                 edge = 0.05  # Base edge for copy trades
