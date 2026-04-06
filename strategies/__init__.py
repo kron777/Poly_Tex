@@ -4,3 +4,5 @@ from strategies.momentum import MomentumStrategy
 from strategies.convergence import ConvergenceStrategy
 
 from strategies.short_term import ShortTermStrategy
+
+from strategies.websocket_trader import WebSocketTrader
