@@ -12,7 +12,7 @@ from logger import get_logger
 from market_scanner import scan_markets
 from risk_manager import RiskManager
 from strategies import (ArbitrageStrategy, WhaleCopyStrategy,
-                        MomentumStrategy, ConvergenceStrategy)
+                        MomentumStrategy, ConvergenceStrategy, ShortTermStrategy)
 from clob_client import get_client
 import state
 from state import update, add_trade, add_opportunity, TradeRecord
@@ -159,8 +159,7 @@ def main():
     strategies = [
         ArbitrageStrategy(capital=CAPITAL_ARB, paper=not IS_LIVE),
         WhaleCopyStrategy(capital=CAPITAL_WHALE, paper=not IS_LIVE),
-        MomentumStrategy(capital=CAPITAL_MOMENTUM, paper=not IS_LIVE),
-        ConvergenceStrategy(capital=CAPITAL_FLASH, paper=not IS_LIVE),
+        ShortTermStrategy(capital=200.0, paper=not IS_LIVE),
     ]
     log.info(f"Loaded {len(strategies)} strategies")
 

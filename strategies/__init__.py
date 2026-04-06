@@ -2,3 +2,5 @@ from strategies.arbitrage import ArbitrageStrategy
 from strategies.whale_copy import WhaleCopyStrategy
 from strategies.momentum import MomentumStrategy
 from strategies.convergence import ConvergenceStrategy
+
+from strategies.short_term import ShortTermStrategy
